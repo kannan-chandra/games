@@ -48,7 +48,11 @@
 
     .screen.active { display: flex; }
 
-    h1, h2, h3, p { color: var(--text); text-align: center; margin: 0.5rem 0; }
+    h1, h2, h3, p {
+      color: var(--text);
+      text-align: center;
+      margin: 0.5rem 0;
+    }
 
     .timer {
       text-align: center;
@@ -167,11 +171,29 @@
   </main>
 
   <script>
+    // === Hardcoded list of answers ===
+    // Edit this list to customize your game.
     const words = [
-      "Elephant","Spaceship","Making pizza","Swimming","Doctor","Superhero",
-      "Football","Dancing","Singing","Cooking","Flying a kite","Reading a book",
-      "Driving a car","Basketball","Pirate","Robot","Teacher","Soccer",
-      "Gardening","Taking a selfie"
+      "Elephant",
+      "Spaceship",
+      "Making pizza",
+      "Swimming",
+      "Doctor",
+      "Superhero",
+      "Football",
+      "Dancing",
+      "Singing",
+      "Cooking",
+      "Flying a kite",
+      "Reading a book",
+      "Driving a car",
+      "Basketball",
+      "Pirate",
+      "Robot",
+      "Teacher",
+      "Soccer",
+      "Gardening",
+      "Taking a selfie"
     ];
 
     let timerSeconds = 60;
@@ -181,7 +203,8 @@
     let skipped = [];
 
     function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
     }
 
@@ -193,16 +216,22 @@
     }
 
     function updateTimerDisplay() {
-      document.getElementById('timer').textContent = timerSeconds;
+      const timerEl = document.getElementById('timer');
+      if (timerEl) timerEl.textContent = timerSeconds;
     }
 
     function showWord() {
-      document.getElementById('current-word').textContent = words[currentIndex];
+      const wordEl = document.getElementById('current-word');
+      if (!wordEl || words.length === 0) return;
+      wordEl.textContent = words[currentIndex];
     }
 
     function nextWord() {
+      if (words.length === 0) return;
+
       currentIndex++;
       if (currentIndex >= words.length) {
+        // If we reach the end, reshuffle and start from the beginning
         shuffle(words);
         currentIndex = 0;
       }
@@ -210,6 +239,7 @@
     }
 
     function startGame() {
+      // Reset state
       correct = [];
       skipped = [];
       timerSeconds = 60;
@@ -217,20 +247,34 @@
       shuffle(words);
       showWord();
       updateTimerDisplay();
+
+      // Switch screen
       showScreen('screen-game');
 
-      if (timerId !== null) clearInterval(timerId);
+      // Clear any previous timer
+      if (timerId !== null) {
+        clearInterval(timerId);
+      }
 
+      // Start timer
       timerId = setInterval(() => {
         timerSeconds--;
+        if (timerSeconds < 0) {
+          timerSeconds = 0;
+        }
         updateTimerDisplay();
-        if (timerSeconds <= 0) endGame();
+
+        if (timerSeconds <= 0) {
+          endGame();
+        }
       }, 1000);
     }
 
     function endGame() {
-      clearInterval(timerId);
-      timerId = null;
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
       populateSummary();
       showScreen('screen-summary');
     }
@@ -248,15 +292,47 @@
     }
 
     function populateSummary() {
-      document.getElementById('summary-score').textContent = correct.length;
+      const scoreEl = document.getElementById('summary-score');
+      const correctListEl = document.getElementById('correct-list');
+      const skippedListEl = document.getElementById('skipped-list');
 
-      const correctList = document.getElementById('correct-list');
-      const skippedList = document.getElementById('skipped-list');
-      correctList.innerHTML = "";
-      skippedList.innerHTML = "";
+      scoreEl.textContent = correct.length;
 
-      (correct.length ? correct : ["None this round."])
-        .forEach(w => correctList.appendChild(Object.assign(document.createElement("li"), {textContent: w})));
+      correctListEl.innerHTML = "";
+      skippedListEl.innerHTML = "";
 
-      (skipped.length ? skipped : ["None skipped."])
-        .forEach(w => skippedList.appendChild(Object.assign(document.createElement("li"), {textContent: w
+      if (correct.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = "None this round.";
+        correctListEl.appendChild(li);
+      } else {
+        correct.forEach(word => {
+          const li = document.createElement('li');
+          li.textContent = word;
+          correctListEl.appendChild(li);
+        });
+      }
+
+      if (skipped.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = "None skipped.";
+        skippedListEl.appendChild(li);
+      } else {
+        skipped.forEach(word => {
+          const li = document.createElement('li');
+          li.textContent = word;
+          skippedListEl.appendChild(li);
+        });
+      }
+    }
+
+    function goToStart() {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      showScreen('screen-start');
+    }
+  </script>
+</body>
+</html>
