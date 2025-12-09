@@ -6,125 +6,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
-      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      color-scheme: dark;
-      --bg: #1e1e1e;
-      --card: #2a2a2a;
-      --text: #f5f5f5;
-      --subtle: #cccccc;
-      --primary: #4f8cff;
-      --secondary: #444;
-      --danger: #ff4f4f;
-    }
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color-scheme: dark;
+  --bg: #1e1e1e;
+  --card: #2a2a2a;
+  --text: #f5f5f5;
+  --subtle: #cccccc;
+  --primary: #4f8cff;
+  --secondary: #444;
+  --danger: #ff4f4f;
+}
 
-    * { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      background: var(--bg);
-      color: var(--text);
-    }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+}
 
-    main {
-      flex: 1;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-    }
+/* ⬇️ Updated layout rules */
+.screen {
+  display: none;
+  height: 100dvh;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 0;
+  gap: 0.5rem;
+}
 
-    .screen {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      justify-content: center;
-      gap: 1rem;
-    }
+.screen.active { display: flex; }
 
-    .screen.active { display: flex; }
+/* Spacing tightened */
+h1, h2, h3, p {
+  color: var(--text);
+  text-align: center;
+  margin: 0.25rem 0;
+}
 
-    h1, h2, h3, p {
-      color: var(--text);
-      text-align: center;
-      margin: 0.5rem 0;
-    }
-
-    .timer {
-      text-align: center;
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-top: 0.5rem;
-      color: #ffffff;
-    }
-
-    .word-box {
-      margin: 1.5rem 0;
-      padding: 1.5rem 1.25rem;
-      border-radius: 1rem;
-      background: var(--card);
-      text-align: center;
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--text);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-      word-wrap: break-word;
-    }
-
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: auto;
-    }
-
-    button {
-      padding: 1rem;
-      font-size: 1.1rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      width: 100%;
-      touch-action: manipulation;
-      color: #fff;
-    }
-
-    button:active { transform: scale(0.97); }
-
-    .btn-primary { background: var(--primary); }
-    .btn-secondary { background: var(--secondary); }
-    .btn-danger { background: var(--danger); }
-
-    .summary-section {
-      background: var(--card);
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      max-height: 40vh;
-      overflow-y: auto;
-    }
-
-    ul {
-      padding-left: 1.25rem;
-      margin: 0.25rem 0 0.75rem;
-      color: var(--subtle);
-    }
-
-    .score {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    @media (min-width: 600px) {
-      .buttons { flex-direction: row; }
-      .buttons button { width: 50%; }
-    }
+/* Slightly smaller word box */
+.word-box {
+  margin: 1rem 0;
+  padding: 1rem 1rem;
+  border-radius: 1rem;
+  background: var(--card);
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  word-wrap: break-word;
+}
   </style>
 </head>
 <body>
