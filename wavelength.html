@@ -323,6 +323,7 @@
         <p>Give your team a verbal clue to guide them to the green zone</p>
       </div>
       <div class="buttons">
+        <button class="btn-secondary" onclick="pickAnotherSpectrum()">Pick Another</button>
         <button class="btn-primary" onclick="showGuessScreen()">Team Ready</button>
       </div>
     </section>
@@ -511,6 +512,21 @@
       document.getElementById('psychic-zones').classList.add('visible');
 
       goToScreen('screen-psychic');
+    }
+
+    function pickAnotherSpectrum() {
+      if (spectrums.length === 0) {
+        alert('Spectrums not loaded yet. Please try again.');
+        return;
+      }
+
+      currentSpectrum = spectrums[Math.floor(Math.random() * spectrums.length)];
+      targetPosition = Math.random() * 80 + 10;
+
+      document.getElementById('left-label').textContent = currentSpectrum[0];
+      document.getElementById('right-label').textContent = currentSpectrum[1];
+
+      setTargetZones(targetPosition, 'psychic');
     }
 
     function showGuessScreen() {
