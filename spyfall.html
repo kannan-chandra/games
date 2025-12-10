@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Spyfall</title>
+  <title>Vellaiyappan</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     :root {
@@ -14,7 +14,6 @@
       --subtle: #cccccc;
       --primary: #4f8cff;
       --secondary: #444;
-      --danger: #ff4f4f;
       --success: #4fbb6d;
     }
 
@@ -64,7 +63,7 @@
       text-align: center;
     }
 
-    .location-card {
+    .word-card {
       background: var(--card);
       border-radius: 1rem;
       padding: 2rem 1.5rem;
@@ -73,31 +72,10 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     }
 
-    .location-name {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: var(--success);
-    }
-
-    .role-name {
-      font-size: 1.3rem;
-      color: var(--subtle);
-    }
-
-    .spy-card {
-      background: var(--danger);
-      border-radius: 1rem;
-      padding: 2rem 1.5rem;
-      margin: 1rem 0;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-    }
-
-    .spy-text {
+    .word-display {
       font-size: 2.5rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--success);
     }
 
     input {
@@ -172,6 +150,37 @@
     .btn-primary { background: var(--primary); }
     .btn-secondary { background: var(--secondary); }
 
+    .word-set-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .word-set-btn {
+      padding: 1.25rem;
+      font-size: 1.2rem;
+      border-radius: 1rem;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .word-set-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .word-set-btn:active {
+      transform: scale(0.98);
+      background: var(--primary);
+    }
+
     @media (min-width: 600px) {
       .buttons { flex-direction: row; }
       .buttons button { width: 50%; }
@@ -180,9 +189,19 @@
 </head>
 <body>
   <main>
+    <!-- Word Set Selection Screen -->
+    <section id="screen-select" class="screen active">
+      <h1>Vellaiyappan</h1>
+      <p>Choose a word set</p>
+      <div class="word-set-list" id="word-set-list"></div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back</button>
+      </div>
+    </section>
+
     <!-- Setup: Enter Word -->
-    <section id="screen-word" class="screen active">
-      <h1>Spyfall</h1>
+    <section id="screen-word" class="screen">
+      <h1>Vellaiyappan</h1>
       <p>All players must agree on a random word</p>
       <div class="info-box">
         <p>This word will be used to synchronize the game. Everyone must enter the <strong>exact same word</strong>.</p>
@@ -225,155 +244,112 @@
     <section id="screen-round" class="screen">
       <h1 id="round-title">Banana Round 1</h1>
       <div class="info-box">
-        <p>All players ready? Tap Reveal to see your role.</p>
+        <p>All players ready? Tap Reveal to see your word.</p>
       </div>
       <div class="buttons">
-        <button class="btn-primary" onclick="revealRole()">Reveal Role</button>
+        <button class="btn-primary" onclick="revealWord()">Reveal Word</button>
       </div>
     </section>
 
     <!-- Reveal Screen -->
     <section id="screen-reveal" class="screen">
-      <div id="role-display"></div>
+      <div class="word-card">
+        <div class="word-display" id="word-display">Word</div>
+      </div>
+      <div class="info-box">
+        <p>Give one-word clues about your word. Try to figure out who has the different word!</p>
+        <p><strong>Note:</strong> One player has a different but related word. They don't know they're different.</p>
+      </div>
       <div class="buttons">
         <button class="btn-primary" onclick="nextRound()">Next Round</button>
-        <button class="btn-secondary" onclick="goHome()">Back to Menu</button>
+        <button class="btn-secondary" id="reveal-back-btn" onclick="goToSelect()">Change Word Set</button>
       </div>
     </section>
   </main>
 
   <script>
-    const locations = [
-      {
-        name: "Bank",
-        roles: ["Manager", "Teller", "Security Guard", "Customer", "Robber", "Accountant"]
-      },
-      {
-        name: "Hospital",
-        roles: ["Doctor", "Nurse", "Patient", "Surgeon", "Receptionist", "Janitor"]
-      },
-      {
-        name: "Beach",
-        roles: ["Lifeguard", "Surfer", "Sunbather", "Beach Vendor", "Tourist", "Photographer"]
-      },
-      {
-        name: "Restaurant",
-        roles: ["Chef", "Waiter", "Customer", "Host", "Dishwasher", "Food Critic"]
-      },
-      {
-        name: "School",
-        roles: ["Teacher", "Student", "Principal", "Janitor", "Librarian", "Coach"]
-      },
-      {
-        name: "Casino",
-        roles: ["Dealer", "Gambler", "Bartender", "Security", "Pit Boss", "Cocktail Waitress"]
-      },
-      {
-        name: "Airplane",
-        roles: ["Pilot", "Flight Attendant", "Passenger", "Co-pilot", "Air Marshal", "Child"]
-      },
-      {
-        name: "Movie Theater",
-        roles: ["Moviegoer", "Projectionist", "Usher", "Ticket Seller", "Manager", "Popcorn Vendor"]
-      },
-      {
-        name: "Space Station",
-        roles: ["Astronaut", "Commander", "Engineer", "Scientist", "Doctor", "Tourist"]
-      },
-      {
-        name: "Pirate Ship",
-        roles: ["Captain", "First Mate", "Cook", "Sailor", "Prisoner", "Navigator"]
-      },
-      {
-        name: "Cruise Ship",
-        roles: ["Captain", "Passenger", "Bartender", "Musician", "Waiter", "Entertainer"]
-      },
-      {
-        name: "Subway",
-        roles: ["Passenger", "Conductor", "Ticket Inspector", "Busker", "Pickpocket", "Homeless Person"]
-      },
-      {
-        name: "Circus",
-        roles: ["Acrobat", "Clown", "Ringmaster", "Magician", "Animal Trainer", "Audience Member"]
-      },
-      {
-        name: "Embassy",
-        roles: ["Ambassador", "Security", "Tourist", "Diplomat", "Refugee", "Secretary"]
-      },
-      {
-        name: "Police Station",
-        roles: ["Detective", "Criminal", "Officer", "Lawyer", "Witness", "Desk Clerk"]
-      },
-      {
-        name: "Supermarket",
-        roles: ["Cashier", "Shopper", "Manager", "Stock Clerk", "Security Guard", "Mystery Shopper"]
-      },
-      {
-        name: "Hotel",
-        roles: ["Guest", "Receptionist", "Bellhop", "Housekeeper", "Manager", "Concierge"]
-      },
-      {
-        name: "Military Base",
-        roles: ["Soldier", "Commander", "Medic", "Engineer", "Spy", "Recruit"]
-      },
-      {
-        name: "University",
-        roles: ["Professor", "Student", "Dean", "Janitor", "Librarian", "Teaching Assistant"]
-      },
-      {
-        name: "Art Museum",
-        roles: ["Curator", "Visitor", "Security Guard", "Artist", "Tour Guide", "Art Thief"]
-      },
-      {
-        name: "Train",
-        roles: ["Conductor", "Passenger", "Engineer", "Ticket Collector", "Dining Car Attendant", "Hobo"]
-      },
-      {
-        name: "Spa",
-        roles: ["Masseuse", "Customer", "Receptionist", "Manager", "Yoga Instructor", "Manicurist"]
-      },
-      {
-        name: "Theater",
-        roles: ["Actor", "Director", "Audience Member", "Stage Hand", "Prompter", "Costume Designer"]
-      },
-      {
-        name: "Corporate Party",
-        roles: ["CEO", "Manager", "Employee", "Caterer", "Entertainer", "Intern"]
-      },
-      {
-        name: "Amusement Park",
-        roles: ["Ride Operator", "Visitor", "Food Vendor", "Mascot", "Security", "Maintenance Worker"]
-      },
-      {
-        name: "Wedding",
-        roles: ["Bride", "Groom", "Guest", "Photographer", "Caterer", "Officiant"]
-      },
-      {
-        name: "Gas Station",
-        roles: ["Cashier", "Customer", "Mechanic", "Manager", "Truck Driver", "Robber"]
-      },
-      {
-        name: "Night Club",
-        roles: ["DJ", "Bartender", "Bouncer", "Dancer", "VIP Guest", "Coat Check Attendant"]
-      },
-      {
-        name: "Library",
-        roles: ["Librarian", "Student", "Professor", "Janitor", "Homeless Person", "IT Support"]
-      },
-      {
-        name: "Construction Site",
-        roles: ["Foreman", "Worker", "Architect", "Engineer", "Inspector", "Delivery Driver"]
-      },
-      {
-        name: "Yishun",
-        roles: ["Lakshmi", "Piriya", "Navene", "Priya", "Kannan", "Pattu"]
-      }
-    ];
-
+    let wordSets = [];
+    let wordPairs = [];
+    let selectedWordSet = null;
     let syncWord = '';
     let numPlayers = 0;
     let playerNumber = 0;
     let roundNumber = 1;
+    let hasMultipleSets = false;
+
+    async function discoverWordSets() {
+      const sets = [];
+      let i = 1;
+
+      while (true) {
+        try {
+          const response = await fetch(`word-sets/white-${i}.txt`);
+          if (response.ok) {
+            const text = await response.text();
+            const lines = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+            const displayName = lines.length > 0 ? lines[0] : `white-${i}`;
+            sets.push({ filename: `white-${i}`, displayName });
+            i++;
+          } else {
+            break;
+          }
+        } catch {
+          break;
+        }
+      }
+
+      return sets;
+    }
+
+    async function initWordSetList() {
+      const listEl = document.getElementById('word-set-list');
+      listEl.innerHTML = '<p>Loading word sets...</p>';
+
+      wordSets = await discoverWordSets();
+
+      listEl.innerHTML = '';
+
+      if (wordSets.length === 0) {
+        listEl.innerHTML = '<p>No word sets found</p>';
+        return;
+      }
+
+      hasMultipleSets = wordSets.length > 1;
+
+      if (wordSets.length === 1) {
+        await selectWordSet(wordSets[0].filename);
+        return;
+      }
+
+      wordSets.forEach(set => {
+        const btn = document.createElement('button');
+        btn.className = 'word-set-btn';
+        btn.textContent = set.displayName;
+        btn.onclick = () => selectWordSet(set.filename);
+        listEl.appendChild(btn);
+      });
+    }
+
+    async function selectWordSet(setName) {
+      selectedWordSet = setName;
+      await loadWordPairs(setName);
+      goToScreen('screen-word');
+    }
+
+    async function loadWordPairs(setName) {
+      try {
+        const response = await fetch(`word-sets/${setName}.txt`);
+        const text = await response.text();
+        const lines = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+        const pairLines = lines.slice(1);
+        wordPairs = pairLines.map(line => line.split(',').map(w => w.trim()));
+      } catch (error) {
+        console.error('Failed to load word pairs:', error);
+        wordPairs = [['Error', 'Loading']];
+      }
+    }
+
+    initWordSetList();
 
     function simpleHash(str) {
       let hash = 0;
@@ -452,43 +428,32 @@
       goToScreen('screen-round');
     }
 
-    function revealRole() {
+    function revealWord() {
       if (!syncWord || !numPlayers || !playerNumber) return;
 
       const seed = syncWord + roundNumber;
-      const spyNumber = seededRandom(seed + '-spy', 1, numPlayers);
+      const oddOneOut = seededRandom(seed + '-odd', 1, numPlayers);
+      const pairIndex = seededRandom(seed + '-pair', 0, wordPairs.length - 1);
+      const wordPair = wordPairs[pairIndex];
 
-      let location;
-      if (syncWord.toLowerCase() === 'danger') {
-        location = locations.find(l => l.name === 'Yishun');
+      let word;
+      if (playerNumber === oddOneOut) {
+        word = wordPair[1];
       } else {
-        const locationIndex = seededRandom(seed + '-location', 0, locations.length - 2);
-        location = locations[locationIndex];
+        word = wordPair[0];
       }
 
-      const roleDisplay = document.getElementById('role-display');
+      document.getElementById('word-display').textContent = word;
 
-      if (playerNumber === spyNumber) {
-        roleDisplay.innerHTML = `
-          <div class="spy-card">
-            <div class="spy-text">YOU ARE THE SPY</div>
-          </div>
-          <div class="info-box">
-            <p>You don't know the location. Ask questions and try to figure it out without revealing that you're the spy!</p>
-          </div>
-        `;
-      } else {
-        const roleIndex = seededRandom(seed + '-role-' + playerNumber, 0, location.roles.length - 1);
-        const role = location.roles[roleIndex];
-        roleDisplay.innerHTML = `
-          <div class="location-card">
-            <div class="location-name">${location.name}</div>
-            <div class="role-name">${role}</div>
-          </div>
-          <div class="info-box">
-            <p>Ask and answer questions to find the spy, but don't reveal the location!</p>
-          </div>
-        `;
+      const revealBackBtn = document.getElementById('reveal-back-btn');
+      if (revealBackBtn) {
+        if (hasMultipleSets) {
+          revealBackBtn.textContent = 'Change Word Set';
+          revealBackBtn.onclick = goToSelect;
+        } else {
+          revealBackBtn.textContent = 'Back';
+          revealBackBtn.onclick = goHome;
+        }
       }
 
       goToScreen('screen-reveal');
@@ -497,6 +462,14 @@
     function nextRound() {
       roundNumber++;
       showRoundScreen();
+    }
+
+    function goToSelect() {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      goToScreen('screen-select');
     }
   </script>
 </body>
