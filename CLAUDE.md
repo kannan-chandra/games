@@ -215,6 +215,21 @@ async function discoverWordSets() {
 
 ## UI Patterns
 
+### Mobile Viewport Height
+**IMPORTANT**: Always use `100dvh` instead of `100vh` for viewport heights to account for mobile browser UI (iOS Safari URL bar, Android Chrome navigation).
+
+```css
+body {
+  height: 100dvh;  /* Use dvh, NOT vh */
+}
+
+main {
+  max-height: 100dvh;  /* Use dvh, NOT vh */
+}
+```
+
+The `dvh` (dynamic viewport height) unit ensures buttons and content remain visible and accessible even when mobile browser UI is present. This prevents primary action buttons from being hidden below the browser chrome.
+
 ### Screen Management
 All multi-screen games use:
 ```html
