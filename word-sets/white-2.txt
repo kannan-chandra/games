@@ -45,3 +45,7 @@ Murukku,Mixture
 Vadai,Bajji
 Kesari,Payasam
 MGR,Sivaji Ganesan
+Parotta,Chapati
+Paneer,Tofu
+Appam,Idiyappam
+Upma,Pongal
