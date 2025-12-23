@@ -297,7 +297,7 @@
 
           if (currentCategory === 'Ending') {
             endingCards.push({ primary: line, secondary: null, category: 'Ending' });
-          } else {
+          } else if (currentCategory) {
             const parts = line.split(' - ');
             if (parts.length === 2) {
               regularCards.push({ primary: parts[1], secondary: parts[0], category: currentCategory });
@@ -305,6 +305,12 @@
               regularCards.push({ primary: parts[0], secondary: null, category: currentCategory });
             }
           }
+        }
+
+        if (endingCards.length === 0) {
+          alert('Error: Word set must contain at least one Ending card');
+          regularCards = [];
+          return;
         }
       } catch (error) {
         console.error('Failed to load cards:', error);
@@ -359,6 +365,10 @@
       const shuffledRegular = shuffle(regularCards);
       const shuffledEndings = shuffle(endingCards);
 
+      const uniqueCategories = new Set(regularCards.map(c => c.category || 'Unknown'));
+      const numCategories = uniqueCategories.size;
+      const enforceLimit = numCategories >= 3;
+
       const drawn = [];
       const categoryCount = {};
 
@@ -366,7 +376,7 @@
         const category = card.category || 'Unknown';
         const count = categoryCount[category] || 0;
 
-        if (count < 2) {
+        if (!enforceLimit || count < 2) {
           drawn.push(card);
           categoryCount[category] = count + 1;
 
