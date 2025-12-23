@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vellaiyappan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color-scheme: dark;
+      --bg: #1e1e1e;
+      --card: #2a2a2a;
+      --text: #f5f5f5;
+      --subtle: #cccccc;
+      --primary: #4f8cff;
+      --secondary: #444;
+      --success: #4fbb6d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    main {
+      flex: 1;
+      max-width: 600px;
+      max-height: 100dvh;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .screen.active { display: flex; }
+
+    h1, h2, h3, p {
+      color: var(--text);
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    .info-box {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    .word-card {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 2rem 1.5rem;
+      margin: 1rem 0;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .word-display {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    input {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 0.5rem;
+      border: 2px solid var(--secondary);
+      background: var(--card);
+      color: var(--text);
+      width: 100%;
+      margin: 0.5rem 0;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .number-btn {
+      padding: 1.5rem;
+      font-size: 1.5rem;
+      border-radius: 1rem;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid var(--secondary);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .number-btn:active {
+      transform: scale(0.95);
+    }
+
+    .number-btn.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: auto;
+    }
+
+    button {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      touch-action: manipulation;
+      color: #fff;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary { background: var(--primary); }
+    .btn-secondary { background: var(--secondary); }
+
+    .word-set-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .word-set-btn {
+      padding: 1.25rem;
+      font-size: 1.2rem;
+      border-radius: 1rem;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .word-set-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .word-set-btn:active {
+      transform: scale(0.98);
+      background: var(--primary);
+    }
+
+    @media (min-width: 600px) {
+      .buttons { flex-direction: row; }
+      .buttons button { width: 50%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Word Set Selection Screen -->
+    <section id="screen-select" class="screen active">
+      <h1>Vellaiyappan</h1>
+      <p>Choose a word set</p>
+      <div class="word-set-list" id="word-set-list"></div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back</button>
+      </div>
+    </section>
+
+    <!-- Setup: Enter Word -->
+    <section id="screen-word" class="screen">
+      <h1>Vellaiyappan</h1>
+      <p>All players must agree on a random word</p>
+      <div class="info-box">
+        <p>This word will be used to synchronize the game. Everyone must enter the <strong>exact same word</strong>.</p>
+      </div>
+      <input type="text" id="sync-word" placeholder="Enter sync word..." autocomplete="off" />
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back</button>
+        <button class="btn-primary" onclick="enterPlayers()">Next</button>
+      </div>
+    </section>
+
+    <!-- Setup: Number of Players -->
+    <section id="screen-players" class="screen">
+      <h2>How many players?</h2>
+      <div class="number-grid">
+        <button class="number-btn" onclick="selectPlayers(2)">2</button>
+        <button class="number-btn" onclick="selectPlayers(3)">3</button>
+        <button class="number-btn" onclick="selectPlayers(4)">4</button>
+        <button class="number-btn" onclick="selectPlayers(5)">5</button>
+        <button class="number-btn" onclick="selectPlayers(6)">6</button>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goToScreen('screen-word')">Back</button>
+        <button class="btn-primary" id="players-next" onclick="enterPlayerNumber()" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- Setup: Your Player Number -->
+    <section id="screen-number" class="screen">
+      <h2>Choose your player number</h2>
+      <p>Each player picks a unique number from 1 to <span id="max-player"></span></p>
+      <div class="number-grid" id="player-number-grid"></div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goToScreen('screen-players')">Back</button>
+        <button class="btn-primary" id="number-next" onclick="showRoundScreen()" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- Round Announcement -->
+    <section id="screen-round" class="screen">
+      <h1 id="round-title">Banana Round 1</h1>
+      <div class="info-box">
+        <p>All players ready? Tap Reveal to see your word.</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back to Menu</button>
+        <button class="btn-primary" onclick="revealWord()">Reveal Word</button>
+      </div>
+    </section>
+
+    <!-- Reveal Screen -->
+    <section id="screen-reveal" class="screen">
+      <div class="word-card">
+        <div class="word-display" id="word-display">Word</div>
+      </div>
+      <div class="info-box">
+        <p>Give one-word clues about your word. Try to figure out who has the different word!</p>
+        <p><strong>Note:</strong> One player has a different but related word. They don't know they're different.</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" id="reveal-back-btn" onclick="goToSelect()">Change Word Set</button>
+        <button class="btn-primary" onclick="nextRound()">Next Round</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let wordSets = [];
+    let wordPairs = [];
+    let selectedWordSet = null;
+    let syncWord = '';
+    let numPlayers = 0;
+    let playerNumber = 0;
+    let roundNumber = 1;
+    let hasMultipleSets = false;
+
+    async function discoverWordSets() {
+      const sets = [];
+      let i = 1;
+
+      while (true) {
+        try {
+          const response = await fetch(`word-sets/white-${i}.txt`);
+          if (response.ok) {
+            const text = await response.text();
+            const lines = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+            const displayName = lines.length > 0 ? lines[0] : `white-${i}`;
+            sets.push({ filename: `white-${i}`, displayName });
+            i++;
+          } else {
+            break;
+          }
+        } catch {
+          break;
+        }
+      }
+
+      return sets;
+    }
+
+    async function initWordSetList() {
+      const listEl = document.getElementById('word-set-list');
+      listEl.innerHTML = '<p>Loading word sets...</p>';
+
+      wordSets = await discoverWordSets();
+
+      listEl.innerHTML = '';
+
+      if (wordSets.length === 0) {
+        listEl.innerHTML = '<p>No word sets found</p>';
+        return;
+      }
+
+      hasMultipleSets = wordSets.length > 1;
+
+      if (wordSets.length === 1) {
+        await selectWordSet(wordSets[0].filename);
+        return;
+      }
+
+      wordSets.forEach(set => {
+        const btn = document.createElement('button');
+        btn.className = 'word-set-btn';
+        btn.textContent = set.displayName;
+        btn.onclick = () => selectWordSet(set.filename);
+        listEl.appendChild(btn);
+      });
+    }
+
+    async function selectWordSet(setName) {
+      selectedWordSet = setName;
+      await loadWordPairs(setName);
+      goToScreen('screen-word');
+    }
+
+    async function loadWordPairs(setName) {
+      try {
+        const response = await fetch(`word-sets/${setName}.txt`);
+        const text = await response.text();
+        const lines = text.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+        const pairLines = lines.slice(1);
+        wordPairs = pairLines.map(line => line.split(',').map(w => w.trim()));
+      } catch (error) {
+        console.error('Failed to load word pairs:', error);
+        wordPairs = [['Error', 'Loading']];
+      }
+    }
+
+    initWordSetList();
+
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash);
+    }
+
+    function seededRandom(seed, min, max) {
+      const hash = simpleHash(seed);
+      const normalized = (hash % (max - min + 1)) + min;
+      return normalized;
+    }
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function goToScreen(screenId) {
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function enterPlayers() {
+      const wordInput = document.getElementById('sync-word');
+      syncWord = wordInput.value.trim();
+      if (!syncWord) {
+        alert('Please enter a sync word');
+        return;
+      }
+      goToScreen('screen-players');
+    }
+
+    function selectPlayers(num) {
+      numPlayers = num;
+      document.querySelectorAll('.number-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+      document.getElementById('players-next').disabled = false;
+    }
+
+    function enterPlayerNumber() {
+      if (!numPlayers) return;
+      document.getElementById('max-player').textContent = numPlayers;
+      const grid = document.getElementById('player-number-grid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= numPlayers; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'number-btn';
+        btn.textContent = i;
+        btn.onclick = () => selectPlayerNumber(i);
+        grid.appendChild(btn);
+      }
+      goToScreen('screen-number');
+    }
+
+    function selectPlayerNumber(num) {
+      playerNumber = num;
+      document.querySelectorAll('#player-number-grid .number-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+      document.getElementById('number-next').disabled = false;
+    }
+
+    function showRoundScreen() {
+      if (!syncWord || !numPlayers || !playerNumber) return;
+      const roundTitle = document.getElementById('round-title');
+      const capitalizedWord = syncWord.charAt(0).toUpperCase() + syncWord.slice(1);
+      roundTitle.textContent = `${capitalizedWord} Round ${roundNumber}`;
+      goToScreen('screen-round');
+    }
+
+    function revealWord() {
+      if (!syncWord || !numPlayers || !playerNumber) return;
+
+      const seed = syncWord + roundNumber;
+      const oddOneOut = seededRandom(seed + '-odd', 1, numPlayers);
+      const pairIndex = seededRandom(seed + '-pair', 0, wordPairs.length - 1);
+      const wordPair = wordPairs[pairIndex];
+
+      let word;
+      if (playerNumber === oddOneOut) {
+        word = wordPair[1];
+      } else {
+        word = wordPair[0];
+      }
+
+      document.getElementById('word-display').textContent = word;
+
+      const revealBackBtn = document.getElementById('reveal-back-btn');
+      if (revealBackBtn) {
+        if (hasMultipleSets) {
+          revealBackBtn.textContent = 'Change Word Set';
+          revealBackBtn.onclick = goToSelect;
+        } else {
+          revealBackBtn.textContent = 'Back';
+          revealBackBtn.onclick = goHome;
+        }
+      }
+
+      goToScreen('screen-reveal');
+    }
+
+    function nextRound() {
+      roundNumber++;
+      showRoundScreen();
+    }
+
+    function goToSelect() {
+      roundNumber = 1;
+      goToScreen('screen-select');
+    }
+  </script>
+</body>
+</html>

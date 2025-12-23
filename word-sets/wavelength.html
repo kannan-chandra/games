@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wavelength</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color-scheme: dark;
+      --bg: #1e1e1e;
+      --card: #2a2a2a;
+      --text: #f5f5f5;
+      --subtle: #cccccc;
+      --primary: #4f8cff;
+      --secondary: #444;
+      --success: #4fbb6d;
+      --danger: #ff4f4f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    main {
+      flex: 1;
+      max-width: 600px;
+      max-height: 100dvh;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 0;
+      padding: 0.5rem 0;
+    }
+
+    .screen.active { display: flex; }
+
+    h1, h2, h3, p {
+      color: var(--text);
+      text-align: center;
+      margin: 0.25rem 0;
+    }
+
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.5rem; }
+
+    .spectrum-container {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 1.5rem 1.25rem;
+      margin: 0.5rem 0;
+      flex-shrink: 0;
+    }
+
+    .spectrum-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+
+    .spectrum-label {
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-align: center;
+      flex: 1;
+      color: var(--subtle);
+    }
+
+    .spectrum-label.left {
+      text-align: left;
+    }
+
+    .spectrum-label.right {
+      text-align: right;
+    }
+
+    .spectrum-bar {
+      position: relative;
+      height: 80px;
+      background: var(--secondary);
+      border-radius: 0.5rem;
+      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+
+    .notches {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .notch {
+      position: absolute;
+      top: 0;
+      width: 2px;
+      background: rgba(245, 245, 245, 0.3);
+      transform: translateX(-50%);
+    }
+
+    .notch.h1 { height: 8px; }
+    .notch.h2 { height: 12px; }
+    .notch.h3 { height: 16px; }
+    .notch.h4 { height: 24px; }
+
+    .guess-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      background: white;
+      border: 3px solid var(--text);
+      border-radius: 50%;
+      display: none;
+    }
+
+    .guess-marker.placed {
+      display: block;
+    }
+
+    .result-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 0.5rem;
+      pointer-events: none;
+    }
+
+    .result-overlay.bulls-eye {
+      background: rgba(79, 187, 109, 0.3);
+    }
+
+    .result-overlay.close {
+      background: rgba(255, 193, 7, 0.3);
+    }
+
+    .result-overlay.far {
+      background: rgba(255, 152, 0, 0.3);
+    }
+
+    .target-zones {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: none;
+    }
+
+    .target-zones.visible {
+      display: block;
+    }
+
+    .zone-bulls-eye {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: #4fbb6d;
+      border-left: 3px solid #4fbb6d;
+      border-right: 3px solid #4fbb6d;
+    }
+
+    .zone-close {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: #ffc107;
+      border-left: 3px solid #ffc107;
+      border-right: 3px solid #ffc107;
+    }
+
+    .zone-far {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: #ff9800;
+      border-left: 3px solid #ff9800;
+      border-right: 3px solid #ff9800;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    button {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      touch-action: manipulation;
+      color: #fff;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary { background: var(--primary); }
+    .btn-secondary { background: var(--secondary); }
+
+    .info-box {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--subtle);
+      flex-shrink: 0;
+    }
+
+    @media (max-height: 500px) {
+      main { padding: 0.75rem; }
+
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.2rem; }
+
+      h1, h2, h3, p { margin: 0.1rem 0; }
+
+      .screen { gap: 0.5rem; padding: 0.25rem 0; }
+
+      .spectrum-container {
+        padding: 0.75rem;
+        margin: 0.25rem 0;
+      }
+
+      .spectrum-bar { height: 50px; }
+
+      .spectrum-labels { margin-bottom: 0.5rem; }
+
+      .spectrum-label { font-size: 1rem; }
+
+      .info-box {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .buttons {
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+      }
+
+      button {
+        padding: 0.75rem;
+        font-size: 1rem;
+      }
+    }
+
+    @media (min-width: 600px) {
+      .buttons { flex-direction: row; justify-content: center; }
+      .buttons button:not(:only-child) { width: 50%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Start Screen -->
+    <section id="screen-start" class="screen active">
+      <h1>Wavelength</h1>
+      <p>One player is the psychic. They see a spectrum and a target zone.</p>
+      <p>The psychic gives a <strong>verbal clue</strong> to help the team guess where the target is.</p>
+      <div class="info-box">
+        <p><strong>Example:</strong> For "Cold → Hot", if the target is near Cold, the clue might be "Freezer"</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back</button>
+        <button class="btn-primary" onclick="startRound()">Start Round</button>
+      </div>
+    </section>
+
+    <!-- Psychic Screen -->
+    <section id="screen-psychic" class="screen">
+      <h2>Psychic: Give a Clue</h2>
+      <div class="spectrum-container">
+        <div class="spectrum-labels">
+          <div class="spectrum-label left" id="left-label">Cold</div>
+          <div class="spectrum-label right" id="right-label">Hot</div>
+        </div>
+        <div class="spectrum-bar">
+          <div class="notches" id="psychic-notches"></div>
+          <div class="target-zones" id="psychic-zones">
+            <div class="zone-far" id="psychic-zone-far"></div>
+            <div class="zone-close" id="psychic-zone-close"></div>
+            <div class="zone-bulls-eye" id="psychic-zone-bulls"></div>
+          </div>
+        </div>
+      </div>
+      <div class="info-box">
+        <p>Give your team a verbal clue to guide them to the green zone</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="pickAnotherSpectrum()">Pick Another</button>
+        <button class="btn-primary" onclick="showGuessScreen()">Team Ready</button>
+      </div>
+    </section>
+
+    <!-- Guess Screen -->
+    <section id="screen-guess" class="screen">
+      <h2>Team: Make Your Guess</h2>
+      <div class="spectrum-container">
+        <div class="spectrum-labels">
+          <div class="spectrum-label left" id="guess-left-label">Cold</div>
+          <div class="spectrum-label right" id="guess-right-label">Hot</div>
+        </div>
+        <div class="spectrum-bar" id="guess-bar">
+          <div class="notches" id="guess-notches"></div>
+          <div class="guess-marker" id="guess-marker"></div>
+        </div>
+      </div>
+      <div class="info-box">
+        <p>Tap on the spectrum to place your guess</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-primary" id="reveal-btn" onclick="revealTarget()" disabled>Reveal</button>
+      </div>
+    </section>
+
+    <!-- Reveal Screen -->
+    <section id="screen-reveal" class="screen">
+      <h2>Result</h2>
+      <div class="spectrum-container">
+        <div class="spectrum-labels">
+          <div class="spectrum-label left" id="reveal-left-label">Cold</div>
+          <div class="spectrum-label right" id="reveal-right-label">Hot</div>
+        </div>
+        <div class="spectrum-bar" id="reveal-bar">
+          <div class="notches" id="reveal-notches"></div>
+          <div class="result-overlay" id="result-overlay"></div>
+          <div class="target-zones visible" id="reveal-zones">
+            <div class="zone-far" id="reveal-zone-far"></div>
+            <div class="zone-close" id="reveal-zone-close"></div>
+            <div class="zone-bulls-eye" id="reveal-zone-bulls"></div>
+          </div>
+          <div class="guess-marker placed" id="reveal-guess-marker"></div>
+        </div>
+      </div>
+      <div class="info-box">
+        <p id="result-text">Great guess!</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back to Menu</button>
+        <button class="btn-primary" onclick="startRound()">Next Round</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let spectrums = [];
+    let currentSpectrum = [];
+    let targetPosition = 50;
+    let guessPosition = null;
+
+    async function loadSpectrums() {
+      try {
+        const response = await fetch('word-sets/wavelength-1.txt');
+        const text = await response.text();
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        const normalSpectrums = [];
+        const prioritySpectrums = [];
+        let isPriority = false;
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (line === '---') {
+            isPriority = true;
+            continue;
+          }
+
+          const parts = line.split(',');
+          if (parts.length === 2) {
+            const spectrum = [parts[0].trim(), parts[1].trim()];
+            if (isPriority) {
+              prioritySpectrums.push(spectrum);
+            } else {
+              normalSpectrums.push(spectrum);
+            }
+          }
+        }
+
+        spectrums = [];
+        normalSpectrums.forEach(s => spectrums.push(s));
+        for (let i = 0; i < 5; i++) {
+          prioritySpectrums.forEach(s => spectrums.push(s));
+        }
+
+        if (spectrums.length === 0) {
+          spectrums = [["Cold", "Hot"]];
+        }
+      } catch (error) {
+        console.error('Failed to load spectrums:', error);
+        spectrums = [
+          ["Cold", "Hot"],
+          ["Sad", "Happy"],
+          ["Weak", "Strong"]
+        ];
+      }
+    }
+
+    loadSpectrums();
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function goToScreen(screenId) {
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    const CIRCLE_WIDTH_PERCENT = 1.8;
+
+    function createNotches(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      for (let i = 1; i <= 15; i++) {
+        const notch = document.createElement('div');
+        notch.className = 'notch';
+
+        let heightClass = 'h1';
+        if (i % 8 === 0) {
+          heightClass = 'h4';
+        } else if (i % 4 === 0) {
+          heightClass = 'h3';
+        } else if (i % 2 === 0) {
+          heightClass = 'h2';
+        }
+
+        notch.classList.add(heightClass);
+        notch.style.left = (i * 6.25) + '%';
+        container.appendChild(notch);
+      }
+    }
+
+    function setTargetZones(targetPos, prefix) {
+      const bullsEye = document.getElementById(prefix + '-zone-bulls');
+      const close = document.getElementById(prefix + '-zone-close');
+      const far = document.getElementById(prefix + '-zone-far');
+
+      const bullsRadius = CIRCLE_WIDTH_PERCENT * 0.5;
+      const closeRadius = CIRCLE_WIDTH_PERCENT * 1.5;
+      const farRadius = CIRCLE_WIDTH_PERCENT * 2.5;
+
+      const bullsLeft = Math.max(0, targetPos - bullsRadius);
+      const bullsRight = Math.min(100, targetPos + bullsRadius);
+      bullsEye.style.left = bullsLeft + '%';
+      bullsEye.style.width = (bullsRight - bullsLeft) + '%';
+
+      const closeLeft = Math.max(0, targetPos - closeRadius);
+      const closeRight = Math.min(100, targetPos + closeRadius);
+      close.style.left = closeLeft + '%';
+      close.style.width = (closeRight - closeLeft) + '%';
+
+      const farLeft = Math.max(0, targetPos - farRadius);
+      const farRight = Math.min(100, targetPos + farRadius);
+      far.style.left = farLeft + '%';
+      far.style.width = (farRight - farLeft) + '%';
+    }
+
+    function startRound() {
+      if (spectrums.length === 0) {
+        alert('Spectrums not loaded yet. Please try again.');
+        return;
+      }
+
+      currentSpectrum = spectrums[Math.floor(Math.random() * spectrums.length)];
+      targetPosition = Math.random() * 80 + 10;
+      guessPosition = null;
+
+      document.getElementById('left-label').textContent = currentSpectrum[0];
+      document.getElementById('right-label').textContent = currentSpectrum[1];
+
+      createNotches('psychic-notches');
+      setTargetZones(targetPosition, 'psychic');
+      document.getElementById('psychic-zones').classList.add('visible');
+
+      goToScreen('screen-psychic');
+    }
+
+    function pickAnotherSpectrum() {
+      if (spectrums.length === 0) {
+        alert('Spectrums not loaded yet. Please try again.');
+        return;
+      }
+
+      currentSpectrum = spectrums[Math.floor(Math.random() * spectrums.length)];
+      targetPosition = Math.random() * 80 + 10;
+
+      document.getElementById('left-label').textContent = currentSpectrum[0];
+      document.getElementById('right-label').textContent = currentSpectrum[1];
+
+      setTargetZones(targetPosition, 'psychic');
+    }
+
+    function showGuessScreen() {
+      document.getElementById('guess-left-label').textContent = currentSpectrum[0];
+      document.getElementById('guess-right-label').textContent = currentSpectrum[1];
+
+      createNotches('guess-notches');
+      const guessMarker = document.getElementById('guess-marker');
+      guessMarker.classList.remove('placed');
+      document.getElementById('reveal-btn').disabled = true;
+
+      const guessBar = document.getElementById('guess-bar');
+      guessBar.onclick = (e) => {
+        const rect = guessBar.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        guessPosition = (x / rect.width) * 100;
+        guessPosition = Math.max(0, Math.min(100, guessPosition));
+
+        guessMarker.style.left = guessPosition + '%';
+        guessMarker.classList.add('placed');
+        document.getElementById('reveal-btn').disabled = false;
+      };
+
+      goToScreen('screen-guess');
+    }
+
+    function revealTarget() {
+      if (guessPosition === null) return;
+
+      document.getElementById('reveal-left-label').textContent = currentSpectrum[0];
+      document.getElementById('reveal-right-label').textContent = currentSpectrum[1];
+
+      createNotches('reveal-notches');
+      const revealGuessMarker = document.getElementById('reveal-guess-marker');
+      revealGuessMarker.style.left = guessPosition + '%';
+
+      setTargetZones(targetPosition, 'reveal');
+
+      const distance = Math.abs(targetPosition - guessPosition);
+      const resultOverlay = document.getElementById('result-overlay');
+      let resultText = '';
+      let resultClass = '';
+
+      if (distance < CIRCLE_WIDTH_PERCENT * 0.5) {
+        resultText = 'Bulls-eye! Perfect guess! 🎯';
+        resultClass = 'bulls-eye';
+      } else if (distance < CIRCLE_WIDTH_PERCENT * 1.5) {
+        resultText = 'Close! Very good! 👏';
+        resultClass = 'close';
+      } else if (distance < CIRCLE_WIDTH_PERCENT * 2.5) {
+        resultText = 'Not bad! Getting warmer... 🤔';
+        resultClass = 'far';
+      } else {
+        resultText = 'Way off! Try again! 😅';
+        resultClass = '';
+      }
+
+      resultOverlay.className = 'result-overlay ' + resultClass;
+      document.getElementById('result-text').textContent = resultText;
+
+      goToScreen('screen-reveal');
+    }
+  </script>
+</body>
+</html>

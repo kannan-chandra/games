@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Spyfall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color-scheme: dark;
+      --bg: #1e1e1e;
+      --card: #2a2a2a;
+      --text: #f5f5f5;
+      --subtle: #cccccc;
+      --primary: #4f8cff;
+      --secondary: #444;
+      --danger: #ff4f4f;
+      --success: #4fbb6d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100dvh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    main {
+      flex: 1;
+      max-width: 600px;
+      max-height: 100dvh;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .screen.active { display: flex; }
+
+    h1, h2, h3, p {
+      color: var(--text);
+      text-align: center;
+      margin: 0.5rem 0;
+    }
+
+    .info-box {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    .location-card {
+      background: var(--card);
+      border-radius: 1rem;
+      padding: 2rem 1.5rem;
+      margin: 1rem 0;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .location-name {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--success);
+    }
+
+    .role-name {
+      font-size: 1.3rem;
+      color: var(--subtle);
+    }
+
+    .spy-card {
+      background: var(--danger);
+      border-radius: 1rem;
+      padding: 2rem 1.5rem;
+      margin: 1rem 0;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    }
+
+    .spy-text {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    input {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 0.5rem;
+      border: 2px solid var(--secondary);
+      background: var(--card);
+      color: var(--text);
+      width: 100%;
+      margin: 0.5rem 0;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .number-btn {
+      padding: 1.5rem;
+      font-size: 1.5rem;
+      border-radius: 1rem;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid var(--secondary);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .number-btn:active {
+      transform: scale(0.95);
+    }
+
+    .number-btn.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: auto;
+    }
+
+    button {
+      padding: 1rem;
+      font-size: 1.1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      touch-action: manipulation;
+      color: #fff;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary { background: var(--primary); }
+    .btn-secondary { background: var(--secondary); }
+
+    @media (min-width: 600px) {
+      .buttons { flex-direction: row; }
+      .buttons button { width: 50%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Setup: Enter Word -->
+    <section id="screen-word" class="screen active">
+      <h1>Spyfall</h1>
+      <p>All players must agree on a random word</p>
+      <div class="info-box">
+        <p>This word will be used to synchronize the game. Everyone must enter the <strong>exact same word</strong>.</p>
+      </div>
+      <input type="text" id="sync-word" placeholder="Enter sync word..." autocomplete="off" />
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back</button>
+        <button class="btn-primary" onclick="enterPlayers()">Next</button>
+      </div>
+    </section>
+
+    <!-- Setup: Number of Players -->
+    <section id="screen-players" class="screen">
+      <h2>How many players?</h2>
+      <div class="number-grid">
+        <button class="number-btn" onclick="selectPlayers(2)">2</button>
+        <button class="number-btn" onclick="selectPlayers(3)">3</button>
+        <button class="number-btn" onclick="selectPlayers(4)">4</button>
+        <button class="number-btn" onclick="selectPlayers(5)">5</button>
+        <button class="number-btn" onclick="selectPlayers(6)">6</button>
+      </div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goToScreen('screen-word')">Back</button>
+        <button class="btn-primary" id="players-next" onclick="enterPlayerNumber()" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- Setup: Your Player Number -->
+    <section id="screen-number" class="screen">
+      <h2>Choose your player number</h2>
+      <p>Each player picks a unique number from 1 to <span id="max-player"></span></p>
+      <div class="number-grid" id="player-number-grid"></div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goToScreen('screen-players')">Back</button>
+        <button class="btn-primary" id="number-next" onclick="showRoundScreen()" disabled>Next</button>
+      </div>
+    </section>
+
+    <!-- Round Announcement -->
+    <section id="screen-round" class="screen">
+      <h1 id="round-title">Banana Round 1</h1>
+      <div class="info-box">
+        <p>All players ready? Tap Reveal to see your role.</p>
+      </div>
+      <div class="buttons">
+        <button class="btn-primary" onclick="revealRole()">Reveal Role</button>
+      </div>
+    </section>
+
+    <!-- Reveal Screen -->
+    <section id="screen-reveal" class="screen">
+      <div id="role-display"></div>
+      <div class="buttons">
+        <button class="btn-secondary" onclick="goHome()">Back to Menu</button>
+        <button class="btn-primary" onclick="nextRound()">Next Round</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const locations = [
+      {
+        name: "Bank",
+        roles: ["Manager", "Teller", "Security Guard", "Customer", "Robber", "Accountant"]
+      },
+      {
+        name: "Hospital",
+        roles: ["Doctor", "Nurse", "Patient", "Surgeon", "Receptionist", "Janitor"]
+      },
+      {
+        name: "Beach",
+        roles: ["Lifeguard", "Surfer", "Sunbather", "Beach Vendor", "Tourist", "Photographer"]
+      },
+      {
+        name: "Restaurant",
+        roles: ["Chef", "Waiter", "Customer", "Host", "Dishwasher", "Food Critic"]
+      },
+      {
+        name: "School",
+        roles: ["Teacher", "Student", "Principal", "Janitor", "Librarian", "Coach"]
+      },
+      {
+        name: "Casino",
+        roles: ["Dealer", "Gambler", "Bartender", "Security", "Pit Boss", "Cocktail Waitress"]
+      },
+      {
+        name: "Airplane",
+        roles: ["Pilot", "Flight Attendant", "Passenger", "Co-pilot", "Air Marshal", "Child"]
+      },
+      {
+        name: "Movie Theater",
+        roles: ["Moviegoer", "Projectionist", "Usher", "Ticket Seller", "Manager", "Popcorn Vendor"]
+      },
+      {
+        name: "Space Station",
+        roles: ["Astronaut", "Commander", "Engineer", "Scientist", "Doctor", "Tourist"]
+      },
+      {
+        name: "Pirate Ship",
+        roles: ["Captain", "First Mate", "Cook", "Sailor", "Prisoner", "Navigator"]
+      },
+      {
+        name: "Cruise Ship",
+        roles: ["Captain", "Passenger", "Bartender", "Musician", "Waiter", "Entertainer"]
+      },
+      {
+        name: "Subway",
+        roles: ["Passenger", "Conductor", "Ticket Inspector", "Busker", "Pickpocket", "Homeless Person"]
+      },
+      {
+        name: "Circus",
+        roles: ["Acrobat", "Clown", "Ringmaster", "Magician", "Animal Trainer", "Audience Member"]
+      },
+      {
+        name: "Embassy",
+        roles: ["Ambassador", "Security", "Tourist", "Diplomat", "Refugee", "Secretary"]
+      },
+      {
+        name: "Police Station",
+        roles: ["Detective", "Criminal", "Officer", "Lawyer", "Witness", "Desk Clerk"]
+      },
+      {
+        name: "Supermarket",
+        roles: ["Cashier", "Shopper", "Manager", "Stock Clerk", "Security Guard", "Mystery Shopper"]
+      },
+      {
+        name: "Hotel",
+        roles: ["Guest", "Receptionist", "Bellhop", "Housekeeper", "Manager", "Concierge"]
+      },
+      {
+        name: "Military Base",
+        roles: ["Soldier", "Commander", "Medic", "Engineer", "Spy", "Recruit"]
+      },
+      {
+        name: "University",
+        roles: ["Professor", "Student", "Dean", "Janitor", "Librarian", "Teaching Assistant"]
+      },
+      {
+        name: "Art Museum",
+        roles: ["Curator", "Visitor", "Security Guard", "Artist", "Tour Guide", "Art Thief"]
+      },
+      {
+        name: "Train",
+        roles: ["Conductor", "Passenger", "Engineer", "Ticket Collector", "Dining Car Attendant", "Hobo"]
+      },
+      {
+        name: "Spa",
+        roles: ["Masseuse", "Customer", "Receptionist", "Manager", "Yoga Instructor", "Manicurist"]
+      },
+      {
+        name: "Theater",
+        roles: ["Actor", "Director", "Audience Member", "Stage Hand", "Prompter", "Costume Designer"]
+      },
+      {
+        name: "Corporate Party",
+        roles: ["CEO", "Manager", "Employee", "Caterer", "Entertainer", "Intern"]
+      },
+      {
+        name: "Amusement Park",
+        roles: ["Ride Operator", "Visitor", "Food Vendor", "Mascot", "Security", "Maintenance Worker"]
+      },
+      {
+        name: "Wedding",
+        roles: ["Bride", "Groom", "Guest", "Photographer", "Caterer", "Officiant"]
+      },
+      {
+        name: "Gas Station",
+        roles: ["Cashier", "Customer", "Mechanic", "Manager", "Truck Driver", "Robber"]
+      },
+      {
+        name: "Night Club",
+        roles: ["DJ", "Bartender", "Bouncer", "Dancer", "VIP Guest", "Coat Check Attendant"]
+      },
+      {
+        name: "Library",
+        roles: ["Librarian", "Student", "Professor", "Janitor", "Homeless Person", "IT Support"]
+      },
+      {
+        name: "Construction Site",
+        roles: ["Foreman", "Worker", "Architect", "Engineer", "Inspector", "Delivery Driver"]
+      },
+      {
+        name: "Yishun",
+        roles: ["Lakshmi", "Piriya", "Navene", "Priya", "Kannan", "Pattu"]
+      }
+    ];
+
+    let syncWord = '';
+    let numPlayers = 0;
+    let playerNumber = 0;
+    let roundNumber = 1;
+
+    function simpleHash(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return Math.abs(hash);
+    }
+
+    function seededRandom(seed, min, max) {
+      const hash = simpleHash(seed);
+      const normalized = (hash % (max - min + 1)) + min;
+      return normalized;
+    }
+
+    function goHome() {
+      window.location.href = 'index.html';
+    }
+
+    function goToScreen(screenId) {
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function enterPlayers() {
+      const wordInput = document.getElementById('sync-word');
+      syncWord = wordInput.value.trim();
+      if (!syncWord) {
+        alert('Please enter a sync word');
+        return;
+      }
+      goToScreen('screen-players');
+    }
+
+    function selectPlayers(num) {
+      numPlayers = num;
+      document.querySelectorAll('.number-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+      document.getElementById('players-next').disabled = false;
+    }
+
+    function enterPlayerNumber() {
+      if (!numPlayers) return;
+      document.getElementById('max-player').textContent = numPlayers;
+      const grid = document.getElementById('player-number-grid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= numPlayers; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'number-btn';
+        btn.textContent = i;
+        btn.onclick = () => selectPlayerNumber(i);
+        grid.appendChild(btn);
+      }
+      goToScreen('screen-number');
+    }
+
+    function selectPlayerNumber(num) {
+      playerNumber = num;
+      document.querySelectorAll('#player-number-grid .number-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+      document.getElementById('number-next').disabled = false;
+    }
+
+    function showRoundScreen() {
+      if (!syncWord || !numPlayers || !playerNumber) return;
+      const roundTitle = document.getElementById('round-title');
+      const capitalizedWord = syncWord.charAt(0).toUpperCase() + syncWord.slice(1);
+      roundTitle.textContent = `${capitalizedWord} Round ${roundNumber}`;
+      goToScreen('screen-round');
+    }
+
+    function revealRole() {
+      if (!syncWord || !numPlayers || !playerNumber) return;
+
+      const seed = syncWord + roundNumber;
+      const spyNumber = seededRandom(seed + '-spy', 1, numPlayers);
+
+      let location;
+      if (syncWord.toLowerCase() === 'danger') {
+        location = locations.find(l => l.name === 'Yishun');
+      } else {
+        const locationIndex = seededRandom(seed + '-location', 0, locations.length - 2);
+        location = locations[locationIndex];
+      }
+
+      const roleDisplay = document.getElementById('role-display');
+
+      if (playerNumber === spyNumber) {
+        roleDisplay.innerHTML = `
+          <div class="spy-card">
+            <div class="spy-text">YOU ARE THE SPY</div>
+          </div>
+          <div class="info-box">
+            <p>You don't know the location. Ask questions and try to figure it out without revealing that you're the spy!</p>
+          </div>
+        `;
+      } else {
+        const roleIndex = seededRandom(seed + '-role-' + playerNumber, 0, location.roles.length - 1);
+        const role = location.roles[roleIndex];
+        roleDisplay.innerHTML = `
+          <div class="location-card">
+            <div class="location-name">${location.name}</div>
+            <div class="role-name">${role}</div>
+          </div>
+          <div class="info-box">
+            <p>Ask and answer questions to find the spy, but don't reveal the location!</p>
+          </div>
+        `;
+      }
+
+      goToScreen('screen-reveal');
+    }
+
+    function nextRound() {
+      roundNumber++;
+      showRoundScreen();
+    }
+  </script>
+</body>
+</html>
