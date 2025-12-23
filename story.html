@@ -223,7 +223,8 @@
           const response = await fetch(`word-sets/story-${i}.txt`);
           if (response.ok) {
             const text = await response.text();
-            const displayName = `Story Set ${i}`;
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const displayName = lines.length > 0 ? lines[0] : `Story Set ${i}`;
             sets.push({ filename: `story-${i}`, displayName });
             i++;
           } else {
@@ -282,7 +283,9 @@
         endingCards = [];
         let currentCategory = '';
 
-        for (const line of lines) {
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+
           if (line.startsWith('===')) {
             const match = line.match(/===\s*(\w+)\s*===/);
             if (match) {
